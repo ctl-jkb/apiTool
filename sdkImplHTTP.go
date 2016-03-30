@@ -29,8 +29,8 @@ import (
 
 //// requests honor this state, no need to pass in with every call
 var bCloseConnections = true
-var bDebugRequests = false
-var bDebugResponses = false
+var bDebugRequests = true
+var bDebugResponses = true
 
 func SetCloseConnectionMode(b bool) {
 	bCloseConnections = b
@@ -340,6 +340,7 @@ func invokeHTTP(method, server, uri string, creds *Credentials, body io.Reader, 
 		err = json.NewDecoder(resp.Body).Decode(ret)
 
 		if err != nil {
+			fmt.Println(fmt.Sprintf("JSON decode failed, err=%s", err.Error()))
 			return makeError("JSON decode failed", HTTP_ERROR_JSON, err)
 		}
 	}

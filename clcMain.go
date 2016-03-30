@@ -358,12 +358,21 @@ func (app *AppState) cmdPoolCreate(argDC string, argLBID string, args []string) 
 // nyi consider: expand this app to do the whole rest of clc_sdk
 // nyi consider: command-object dispatching
 
+func printHealthCheck(src *HealthCheckDetails, inset string) {
+	if src == nil {
+		fmt.Println("no health check specified\n")
+	} else {
+		fmt.Printf("%s  health: unhealthy:%d healthy:%d interval:%d targetPort:%d mode:%s\n", 
+			inset, src.Unhealthy, src.Healthy, src.Interval, src.TargetPort, src.Mode)
+	}
+}
+
 func printPoolDetails(pool *PoolDetails, inset string) {
 	fmt.Printf("%spool: LBID:%s, PoolID:%s \n", inset, pool.LBID, pool.PoolID)
 	fmt.Printf("%s  port:%d, method:%s, persistence:%s, timeout:%d, mode:%s \n", inset, 
 		pool.IncomingPort, pool.Method, pool.Persistence, pool.TimeoutMS, pool.Mode)
 
-	fmt.Printf("%s  health:%q\n", inset, pool.Health)  // JSON object, typically a longish string
+	printHealthCheck(pool.Health, inset)
 
 	fmt.Printf("%s  nodes:[ ", inset)
 	for _,node := range pool.Nodes {
@@ -379,7 +388,7 @@ func makePoolFromArgs(args []string, ignore int) (*PoolDetails, error) {
 		LBID:"",
 		IncomingPort:8080,
 		Method:"roundrobin",
-		Health:"",
+		Health:nil,
 		Persistence:"none",
 		TimeoutMS:1000,
 		Mode:"tcp",
@@ -408,7 +417,7 @@ func makePoolFromArgs(args []string, ignore int) (*PoolDetails, error) {
 
 		} else if strings.HasPrefix(s, "health=") {
 			s = strings.TrimPrefix(s, "health=")
-			pool.Health = s
+			pool.Health = nil	// nyi
 
 		} else if strings.HasPrefix(s, "persistence=") {
 			s = strings.TrimPrefix(s, "persistence=")

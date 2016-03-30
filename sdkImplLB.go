@@ -213,6 +213,14 @@ type NodeJSON struct {
 
 type ApiNodes []NodeJSON
 
+type HealthCheckJSON struct {
+    UnhealthyThreshold int `json:"unhealthyThreshold"`
+    HealthyThreshold   int `json:"healthyThreshold"`
+    IntervalSeconds    int `json:"intervalSeconds"`
+    TargetPort         int `json:"targetPort"`
+    Mode               string `json:"mode,omitempty"`
+}
+
 type PoolJSON struct {
 	PoolID       string `json:"id"`
 	IncomingPort int    `json:"port"`
@@ -220,7 +228,7 @@ type PoolJSON struct {
 	Persistence  string `json:"persistence"`
 	TimeoutMS    int64  `json:"idleTimeout"`
 	Mode         string `json:"loadBalancingMode"`
-	Health       string `json:"healthCheck"`
+	Health       *HealthCheckJSON `json:"healthCheck"`
 	Nodes ApiNodes `json:"nodes"`
 }
 
@@ -267,6 +275,17 @@ func (clc clcImpl) inspectLB(dc, lbid string) (*LoadBalancerDetails, HttpError) 
 				json_nodes = make([]PoolNode, 0, 0)
 			}
 
+			var pool_health *HealthCheckDetails = nil
+			if srcpool.Health != nil {
+				pool_health = &HealthCheckDetails {
+					Unhealthy: srcpool.Health.UnhealthyThreshold,
+					Healthy: srcpool.Health.HealthyThreshold,
+					Interval: srcpool.Health.IntervalSeconds,
+					TargetPort: srcpool.Health.TargetPort,
+					Mode: srcpool.Health.Mode,
+				}
+			}
+
 			json_pools[idx] = PoolDetails{
 				PoolID:       srcpool.PoolID,
 				LBID:         apiret.LBID,
@@ -275,6 +294,7 @@ func (clc clcImpl) inspectLB(dc, lbid string) (*LoadBalancerDetails, HttpError) 
 				Persistence:  srcpool.Persistence,
 				TimeoutMS:    srcpool.TimeoutMS,
 				Mode:         srcpool.Mode,
+				Health:       pool_health,
 				Nodes:        json_nodes,
 			}
 		}
